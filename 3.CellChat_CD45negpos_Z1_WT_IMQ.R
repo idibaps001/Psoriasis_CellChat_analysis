@@ -4,6 +4,7 @@ library(tidyverse)
 library(CellChat)
 library(patchwork)
 options(stringsAsFactors = FALSE)
+options(future.globals.maxSize= 8912896000)
 
 setwd("/Users/lucia/Documents/23.psoriasis/07.cellchat/02_z1_wt_imq/cd45pos/")
 load("CD45POS_Z1_WT_IMQ.rds")
@@ -23,38 +24,101 @@ length(Cells(CD45POS_Z1_WT_IMQ)) #[1] 4720
 length(Cells(CD45NEG_Z1_WT_IMQ)) #[1] 5235
 length(Cells(Z1_WT_IMQ)) #[1] 9955
 
+###################################### Modify the names of the three cells to be consistent with the manuscript version.
 Idents(Z1_WT_IMQ) <- "celltypes_2"
 levels(Z1_WT_IMQ)
 #"Dendritic epidermal T cells", "M1-like Macrophages", "Foxp3+ Tregs", "Vγ6 T cells",  "Vγ4 T cells",  "Slamf9+ Macrophages", "Conventional CD4+ T cells", "Langerhans cells",  "Selenop+ M2-like Macrophages", "DoubleNegative T cells", "Resident M2-like Macrophages", "Monocytes", "ILC2", "Neutrophils", "MHCII+Ccr2+ Macrophages", "Cytotoxic CD8+ T cells", "Mature Monocytes" , "Proliferative CD4+ T cells", "Proliferative LC",  "pDC", "Granular keratinocytes", "Stromal cells cycling", "Basal keratinocytes", "Supra-Basal keratinocytes", "Universal fibroblasts", "Basal keratinocytes cycling", "Endothelial cells", "Reticular fibroblasts", "Inner ear fibroblasts", "Hair dermal sheath", "Cornified keratinocytes", "Dermal fibrocytes"    
-Z1_WT_IMQ <- subset(Z1_WT_IMQ, idents = c("Dendritic epidermal T cells", "M1-like Macrophages", "Foxp3+ Tregs", "Vγ6 T cells",  "Vγ4 T cells",  "Slamf9+ Macrophages", "Conventional CD4+ T cells", "Langerhans cells",  "Selenop+ M2-like Macrophages", "DoubleNegative T cells", "Resident M2-like Macrophages", "Monocytes", "ILC2", "Neutrophils", "MHCII+Ccr2+ Macrophages", "Cytotoxic CD8+ T cells", "Mature Monocytes" , "Proliferative CD4+ T cells", "Proliferative LC", "pDC", "Granular keratinocytes", "Stromal cells cycling", "Basal keratinocytes", "Supra-Basal keratinocytes", "Universal fibroblasts", "Basal keratinocytes cycling", "Endothelial cells", "Reticular fibroblasts", "Inner ear fibroblasts", "Hair dermal sheath", "Cornified keratinocytes", "Dermal fibrocytes"    
-))
 
-#CellChat Tutorial https://htmlpreview.github.io/?https://github.com/sqjin/CellChat/blob/master/tutorial/Interface_with_other_single-cell_analysis_toolkits.html
+Z1_WT_IMQ@meta.data$celltypes_4 <- case_when(  
+  Z1_WT_IMQ@meta.data$celltypes_2 == "Selenop+ M2-like Macrophages" ~ "Selenop+ Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_2 == "Resident M2-like Macrophages" ~ "Resident Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_2 == "M1-like Macrophages"  ~ "Thbs1+ Macrophages",
+  TRUE ~ Z1_WT_IMQ@meta.data$celltypes_2
+)
+
+#check
+table( Z1_WT_IMQ@meta.data$celltypes_2,Z1_WT_IMQ@meta.data$celltypes_4    )
+table( Z1_WT_IMQ@meta.data$celltypes_2    )
+table( Z1_WT_IMQ@meta.data$celltypes_4    ) 
+
+#celect cells
+Idents(Z1_WT_IMQ) <- "celltypes_4"
+levels(Z1_WT_IMQ)
+
+Z1_WT_IMQ <- subset(Z1_WT_IMQ, idents = c("Dendritic epidermal T cells", "Thbs1+ Macrophages", "Foxp3+ Tregs", "Vγ6 T cells",  "Vγ4 T cells",  "Slamf9+ Macrophages", 
+                                                      "Conventional CD4+ T cells", "Langerhans cells",  "Selenop+ Macrophages", "DoubleNegative T cells", "Resident Macrophages",
+                                                      "Monocytes", "ILC2", "Neutrophils", "MHCII+Ccr2+ Macrophages", "Cytotoxic CD8+ T cells", "Mature Monocytes" , "Proliferative CD4+ T cells", 
+                                                      "Proliferative LC", "pDC", "Granular keratinocytes", "Stromal cells cycling", "Basal keratinocytes", "Supra-Basal keratinocytes", "Universal fibroblasts",
+                                                      "Basal keratinocytes cycling", "Endothelial cells", "Reticular fibroblasts", "Inner ear fibroblasts", "Hair dermal sheath", "Cornified keratinocytes", "Dermal fibrocytes"    
+))
+length(Cells(Z1_WT_IMQ)) #[1] 8010 cells are selected
+
+# chage the level of naming system
+Z1_WT_IMQ@meta.data$celltypes_5 <- case_when(  
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Thbs1+ Macrophages" ~ "Mono/Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Foxp3+ Tregs" ~ "T/NK cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Vγ6 T cells"  ~ "T/NK cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Vγ4 T cells"  ~ "T/NK cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Slamf9+ Macrophages" ~ "Mono/Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Conventional CD4+ T cells" ~ "T/NK cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Langerhans cells"  ~ "DCs",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Selenop+ Macrophages" ~ "Mono/Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "DoubleNegative T cells" ~ "T/NK cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Resident Macrophages"  ~ "Mono/Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Monocytes" ~ "Mono/Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "ILC2" ~ "T/NK cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "MHCII+Ccr2+ Macrophages"  ~ "Mono/Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Cytotoxic CD8+ T cells" ~ "T/NK cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Mature Monocytes" ~ "Mono/Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Proliferative CD4+ T cells"  ~ "Mono/Macrophages",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Proliferative LC" ~ "DCs",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "pDC" ~ "DCs",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Granular keratinocytes"  ~ "Epidermal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Stromal cells cycling" ~ "Stromal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Basal keratinocytes" ~ "Epidermal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Supra-Basal keratinocytes"  ~ "Epidermal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Universal fibroblasts" ~ "Stromal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Basal keratinocytes cycling" ~ "Epidermal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Reticular fibroblasts"  ~ "Stromal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Inner ear fibroblasts" ~ "Stromal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Hair dermal sheath" ~ "Stromal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Cornified keratinocytes"  ~ "Epidermal cells",
+  Z1_WT_IMQ@meta.data$celltypes_4 == "Dermal fibrocytes" ~ "Stromal cells",
+  
+  TRUE ~ Z1_WT_IMQ@meta.data$celltypes_4
+)
+
+table( Z1_WT_IMQ@meta.data$celltypes_5, Z1_WT_IMQ@meta.data$celltypes_4   ) %>% view()
+table( Z1_WT_IMQ@meta.data$celltypes_5  ) 
+
+Idents(Z1_WT_IMQ) <- "celltypes_5"
+levels(Z1_WT_IMQ)
+#[1] "Dendritic epidermal T cells" "Mono/Macrophages"            "T/NK cells"                  "DCs"                        
+#[5] "Neutrophils"                 "Epidermal cells"             "Stromal cells"               "Endothelial cells"        
+
+#CellChat tutorial https://htmlpreview.github.io/?https://github.com/sqjin/CellChat/blob/master/tutorial/Interface_with_other_single-cell_analysis_toolkits.html
 data.input <- GetAssayData(Z1_WT_IMQ, assay = "RNA", slot = "data") # normalized data matrix
 labels <- Idents(Z1_WT_IMQ)
-meta <- data.frame(group = labels, row.names = names(labels)) # create a dataframe of the cell labels
+samples <- as.factor( Z1_WT_IMQ@meta.data$conditions )
+meta <- data.frame(group = labels, row.names = names(labels), samples = samples) # create a dataframe of the cell labels
 cellchat <- createCellChat(object = data.input, meta = meta, group.by = "group")
 
-#add metadata and set default cell identity
+#add metadata and grouping info
 #cellchat <- addMeta(cellchat, meta = meta, meta.name = "labels")
 #cellchat <- setIdent(cellchat, ident.use = "labels") # set "labels" as default cell identity
-#check grouping info
+#check
 unique(meta$group)
 levels(cellchat@idents) 
-#[1] "Dendritic epidermal T cells"  "M1-like Macrophages"          "Foxp3+ Tregs"                 "Vγ6 T cells"                  "Vγ4 T cells"                  "Slamf9+ Macrophages"          "Conventional CD4+ T cells"    "Langerhans cells"             "Selenop+ M2-like Macrophages"
-#[10] "DoubleNegative T cells"       "Resident M2-like Macrophages" "Monocytes"                    "ILC2"                         "Neutrophils"                  "MHCII+Ccr2+ Macrophages"      "Cytotoxic CD8+ T cells"       "Mature Monocytes"             "Proliferative CD4+ T cells"  
-#[19] "Proliferative LC"             "pDC"                          "Granular keratinocytes"       "Stromal cells cycling"        "Basal keratinocytes"          "Supra-Basal keratinocytes"    "Universal fibroblasts"        "Basal keratinocytes cycling"  "Endothelial cells"           
-#[28] "Reticular fibroblasts"        "Inner ear fibroblasts"        "Hair dermal sheath"           "Cornified keratinocytes"      "Dermal fibrocytes"           
+#[1] "Dendritic epidermal T cells" "Mono/Macrophages"            "Neutrophils"                 "T/NK cells"                  "DCs"                        
+#[6] "Stromal cells"               "Epidermal cells"             "Endothelial cells"     
+
 table(cellchat@idents)
-#Dendritic epidermal T cells Selenop+ M2-like Macrophages      MHCII+Ccr2+ Macrophages                  Neutrophils                  Vγ4 T cells Resident M2-like Macrophages                  Vγ6 T cells          Slamf9+ Macrophages          M1-like Macrophages 
-#97                           518                                           502                          371                          209                          129                          229                          347                          468 
-#DoubleNegative T cells      Monocytes             Proliferative LC    Conventional CD4+ T cells                 Foxp3+ Tregs              ILC2                          pDC   Proliferative CD4+ T cells             Mature Monocytes 
-#132                          213                           18                           86                          118                     25                           12                        35                           68 
-#Langerhans cells       Cytotoxic CD8+ T cells        Universal fibroblasts  Basal keratinocytes cycling      Cornified keratinocytes        Inner ear fibroblasts        Reticular fibroblasts        Stromal cells cycling           Hair dermal sheath 
-#95                           18                         1512                          135                          320                          446                         1214                           89                           56 
-#Endothelial cells       Granular keratinocytes          Basal keratinocytes    Supra-Basal keratinocytes            Dermal fibrocytes 
-#162                          166                           24                          161                           35 
-#CellChat Tutorial https://htmlpreview.github.io/?https://github.com/sqjin/CellChat/blob/master/tutorial/CellChat-vignette.html
+#Dendritic epidermal T cells            Mono/Macrophages                 Neutrophils                  T/NK cells                         DCs 
+#                     97                        2280                         371                         817                         125 
+#Stromal cells             Epidermal cells           Endothelial cells 
+#        3352                         806                         162 
+
+#CellChat tutorial https://htmlpreview.github.io/?https://github.com/sqjin/CellChat/blob/master/tutorial/CellChat-vignette.html
 
 #Set the ligand-receptor interaction database
 CellChatDB <- CellChatDB.mouse
@@ -80,17 +144,19 @@ cellchat <- identifyOverExpressedInteractions(cellchat)
 cellchat <- computeCommunProb(cellchat, population.size = TRUE)
 cellchat <- filterCommunication(cellchat, min.cells = 10)
 
-#generate cell-cell communication results
+#generate a table of cell communication analysis results
 df.net <- subsetCommunication(cellchat)# a data frame consisting of all the inferred cell-cell communications at the level of ligands/receptors
 df.netP <- subsetCommunication(cellchat,slot.name = "netP") # the inferred communications at the level of signaling pathways
 
 dim(df.net)
-#[1] 22506    11
+#[1] 1574    11
 dim(df.netP)
-#[1] 9959    5
+#[1] 824    5
 
-write.csv2(df.net, file = "CD45NEGPOS-Z1_WT_IMQ-CellChat-net.csv")
-write.csv2(df.netP, file = "CD45NEGPOS-Z1_WT_IMQ-CellChat-netP.csv")
+setwd("/Users/lucia/Documents/23.psoriasis/07.cellchat/02_z1_wt_imq/cd45negANDcd45pos/cellchat_v2")
+write.csv2(df.net, file = "CD45NEGPOS-Z1_WT_IMQ-CellChat-net_v2.csv")
+write.csv2(df.netP, file = "CD45NEGPOS-Z1_WT_IMQ-CellChat-netP_v2.csv")
+
 
 #Infer the cell-cell communication at a signaling pathway level
 cellchat <- computeCommunProbPathway(cellchat)
@@ -115,18 +181,10 @@ for (i in 1:nrow(mat)) {
 
 #Part III: Visualization of cell-cell communication network
 cellchat@netP$pathways
-#[1] "MIF"         "CD45"        "TNF"         "APP"         "ICAM"        "CCL"         "THY1"        "FN1"         "CDH1"        "MHC-II"      "THBS"        "GDF"         "CD48"       
-#[14] "GALECTIN"    "CXCL"        "CD96"        "CD137"       "CDH"         "BST2"        "SPP1"        "CD86"        "NECTIN"      "IGF"         "ITGAL-ITGB2" "TGFb"        "LAMININ"    
-#[27] "SELPLG"      "CD40"        "TWEAK"       "NKG2D"       "SEMA4"       "VISFATIN"    "MHC-I"       "APRIL"       "COMPLEMENT"  "ALCAM"       "CD6"         "CD52"        "SEMA6"      
-#[40] "CLEC"        "OSM"         "ANNEXIN"     "IL1"         "GAS"         "ICOS"        "IL2"         "CD80"        "CD226"       "PVR"         "IL10"        "CD39"        "LAIR1"      
-#[53] "JAM"         "LIGHT"       "L1CAM"       "IL4"         "IL6"         "OCLN"        "RANKL"       "PD-L1"       "MPZ"         "PDL2"       
 
 pathways.show <- c( "TNF"  )
 vertex.receiver = seq(1,2)  # a numeric vector. 
 netVisual_aggregate(cellchat, signaling = pathways.show,  vertex.receiver = vertex.receiver)
-netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
-netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
-netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
 
 #Compute the contribution of each ligand-receptor pair to the overall signaling pathway and visualize cell-cell communication mediated by a single ligand-receptor pair
 netAnalysis_contribution(cellchat, signaling = pathways.show)
@@ -134,10 +192,6 @@ netAnalysis_contribution(cellchat, signaling = pathways.show)
 pairLR.TNF <- extractEnrichedLR(cellchat, signaling = pathways.show, geneLR.return = FALSE)
 LR.show <- pairLR.TNF[1,] # show one ligand-receptor pair
 netVisual_individual(cellchat, signaling = pathways.show,  pairLR.use = LR.show)
-netVisual_individual(cellchat, signaling = pathways.show, pairLR.use = LR.show, layout = "circle")
-netVisual_individual(cellchat, signaling = pathways.show, pairLR.use = LR.show, layout = "hierarchy")
-netVisual_individual(cellchat, signaling = pathways.show, pairLR.use = LR.show, layout = "chord")
-netVisual_individual(cellchat, signaling = pathways.show, pairLR.use = LR.show, layout = "spatial")
 
 netVisual_bubble(cellchat, sources.use = 20, targets.use = c(3:8), remove.isolate = FALSE)
 netVisual_bubble(cellchat, sources.use = 7, targets.use = c(13:20), remove.isolate = FALSE)
@@ -193,8 +247,10 @@ netAnalysis_dot(cellchat, pattern = "incoming")
 
 ###################################################################################################
 #                                                                                                 #
-#   To facilitate intergroup comparisons, each CellChat dataset was assigned a new name.          #
+#                     assign a new name to each CellChat dataset                                  #
 #                                                                                                 #
 #                             cellchat.Z1WTIMQ <- cellchat                                        #
 #                                                                                                 #
 ###################################################################################################
+setwd("/Users/lucia/Documents/23.psoriasis/07.cellchat/02_z1_wt_imq/cd45negANDcd45pos/cellchat_v2")
+saveRDS(cellchat, file = "cellchat.Z1WTIMQ.rds")
